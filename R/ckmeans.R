@@ -134,7 +134,7 @@ multickmeans <- function(x, ks, n_rep = 50, p_pred = 1, p_samp = 1, save_kms = T
   # run consensus k means
   ckms <- vector('list', length(ks))
   for(i in 1:length(ks)) {
-    ckms[[i]] <- cKmeans(x = x, k = ks[i], n_rep = n_rep, p_pred = p_pred, p_samp = p_samp, save_kms = save_kms,
+    ckms[[i]] <- ckmeans(x = x, k = ks[i], n_rep = n_rep, p_pred = p_pred, p_samp = p_samp, save_kms = save_kms,
                          hclust_options = hclust_options, calc_bic = calc_bic, ...)
   }
 
