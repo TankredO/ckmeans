@@ -15,7 +15,7 @@
 #' @example /inst/examples/ckmeans_example.R
 #' @import stats
 #' @export
-cKmeans <- function(x, k, n_rep = 50, p_pred = 1, p_samp = 1, save_kms = TRUE, hclust_options = list(method = 'average'),
+ckmeans <- function(x, k, n_rep = 50, p_pred = 1, p_samp = 1, save_kms = TRUE, hclust_options = list(method = 'average'),
                     calc_bic = TRUE, ...) {
 
   pred_sel <- NULL

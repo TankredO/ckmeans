@@ -7,7 +7,7 @@ x = matrix(c(x1, x2, x3), ncol = 3, dimnames = list(1:54, c('x1', 'x2', 'x3')))
 pairs(x)
 
 ## run ckmeans for a single K
-ckm = cKmeans(x, 3, n_rep = 100, p_samp = 0.5, p_pred = 0.5)
+ckm = ckmeans(x, 3, n_rep = 100, p_samp = 0.5, p_pred = 0.5)
 
 # plot consensus matrix with color coded clusters
 plotDist(ckm)
