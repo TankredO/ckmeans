@@ -1,2 +1,2 @@
 # ckmeans
-Consensus K-Means package clustering in R
+Consensus K-Means clustering R package.
