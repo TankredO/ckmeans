@@ -6,7 +6,7 @@ A consensus K-Means clustering R package.
 # install.packages('devtools')
 library(devtools)
 
-# On UNIX you might to run the following line if you are not a sudo user:
+# On UNIX you might have to run the following line if you are not a sudo user:
 # Sys.setenv(TAR = "/bin/tar")
 install_github('https://github.com/TankredO/ckmeans')
 ```
