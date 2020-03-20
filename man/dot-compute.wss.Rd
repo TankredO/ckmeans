@@ -7,7 +7,7 @@
 .compute.wss(x, f)
 }
 \arguments{
-\item{x}{matrix with samples as rows and predictors as columns}
+\item{x}{matrix with samples as rows and features as columns}
 
 \item{f}{vector of cluster memberships for the samples}
 }

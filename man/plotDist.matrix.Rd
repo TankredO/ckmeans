@@ -4,8 +4,16 @@
 \alias{plotDist.matrix}
 \title{Plot distance matrix with clusters}
 \usage{
-\method{plotDist}{matrix}(x, cl = NULL, col = NULL, col_cl = NULL,
-  ord = NULL, returnOrd = FALSE, main = "", ...)
+\method{plotDist}{matrix}(
+  x,
+  cl = NULL,
+  col = NULL,
+  col_cl = NULL,
+  ord = NULL,
+  returnOrd = FALSE,
+  main = "",
+  ...
+)
 }
 \arguments{
 \item{x}{n*n matrix}

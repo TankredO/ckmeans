@@ -4,9 +4,16 @@
 \alias{plotDist.ckmeans}
 \title{Plot ckmeans object as distance matrix}
 \usage{
-\method{plotDist}{ckmeans}(x, col = NULL, ord = NULL,
-  returnOrd = FALSE, plotCC = TRUE, col_cl = NULL, main = NULL,
-  ...)
+\method{plotDist}{ckmeans}(
+  x,
+  col = NULL,
+  ord = NULL,
+  returnOrd = FALSE,
+  plotCC = TRUE,
+  col_cl = NULL,
+  main = NULL,
+  ...
+)
 }
 \arguments{
 \item{x}{cKmeans object}

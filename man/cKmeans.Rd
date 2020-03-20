@@ -4,8 +4,17 @@
 \alias{ckmeans}
 \title{Consensus K-means clustering}
 \usage{
-ckmeans(x, k, n_rep = 50, p_pred = 1, p_samp = 1, save_kms = TRUE,
-  hclust_options = list(method = "average"), calc_bic = TRUE, ...)
+ckmeans(
+  x,
+  k,
+  n_rep = 50,
+  p_pred = 1,
+  p_samp = 1,
+  save_kms = TRUE,
+  hclust_options = list(method = "average"),
+  calc_bic = TRUE,
+  ...
+)
 }
 \arguments{
 \item{x}{matrix with samples in rows and features in columns}
@@ -56,6 +65,13 @@ plotDist(ckm)
 ## run ckmeans for multiple K
 ckms = multickmeans(x, 1:7, n_rep = 100, p_samp = 0.8, p_pred = 0.5)
 plot(ckms$bics, type='l')
+plot(ckms$aics, type='l')
+plot(ckms$sils, type='l')
+plot(ckms$dbs, type='l')
+
+ckms$
+
+ckms$aics
 
 ord = 1:54
 for (i in 1:length(ckms$ckms)) {

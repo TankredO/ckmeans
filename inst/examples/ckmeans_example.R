@@ -18,6 +18,13 @@ plotDist(ckm)
 ## run ckmeans for multiple K
 ckms = multickmeans(x, 1:7, n_rep = 100, p_samp = 0.8, p_pred = 0.5)
 plot(ckms$bics, type='l')
+plot(ckms$aics, type='l')
+plot(ckms$sils, type='l')
+plot(ckms$dbs, type='l')
+
+ckms$
+
+ckms$aics
 
 ord = 1:54
 for (i in 1:length(ckms$ckms)) {

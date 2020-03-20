@@ -4,8 +4,17 @@
 \alias{multickmeans}
 \title{Consensus K-means clustering over mutiple K}
 \usage{
-multickmeans(x, ks, n_rep = 50, p_pred = 1, p_samp = 1,
-  save_kms = TRUE, hclust_options = list(), calc_bic = TRUE, ...)
+multickmeans(
+  x,
+  ks,
+  n_rep = 50,
+  p_pred = 1,
+  p_samp = 1,
+  save_kms = TRUE,
+  hclust_options = list(),
+  calc_bic = TRUE,
+  ...
+)
 }
 \arguments{
 \item{x}{matrix with samples in rows and features in columns}

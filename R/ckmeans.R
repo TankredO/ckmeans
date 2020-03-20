@@ -10,13 +10,30 @@
 #' @param save_kms logical, (or 'minimize') determining whether the k means object should be saved. This can be very memory demanding, depending on n_rep and x. If 'minimize', the kmeans objects are saved without column names, saving memory.
 #' @param hclust_options list of option passed to hclust, which is used to generate consensus clusters
 #' @param calc_bic logical, determining whether the BIC (Bayesian Information Criterion) should be calculated for the k means runs
+# #' @param index.DB_options list, additional arguments passed to \link[clusterSim]{index.DB}
+# #' @param index.S_options list, additional arguments passed to \link[clusterSim]{index.S} and \link[stats]{dist}
 #' @param ... arguments passed to kmeans
 #' @return ckmeans object
 #' @example /inst/examples/ckmeans_example.R
 #' @import stats
 #' @export
-ckmeans <- function(x, k, n_rep = 50, p_pred = 1, p_samp = 1, save_kms = TRUE, hclust_options = list(method = 'average'),
-                    calc_bic = TRUE, ...) {
+ckmeans <- function(
+  x,
+  k,
+  n_rep = 50,
+  p_pred = 1,
+  p_samp = 1,
+  save_kms = TRUE,
+  hclust_options = list(method = 'average'),
+  calc_bic = TRUE,
+  # index.DB_options = list(
+  #
+  # ),
+  # index.S_options = list(
+  #
+  # ),
+  ...
+) {
 
   pred_sel <- NULL
   samp_sel <- NULL
@@ -109,8 +126,14 @@ ckmeans <- function(x, k, n_rep = 50, p_pred = 1, p_samp = 1, save_kms = TRUE, h
               par_names = par_names,
               samp_names = samp_names,
               x = x)
-  class(out) <- c('ckmeans')
+
+  # internal quality metrics
   out$bic <- bic_kmeans2(out$x, out$cc)
+  out$aic <- aic_kmeans2(out$x, out$cc)
+  out$sil <- clusterSim::index.S(dist(out$x), out$cc)
+  out$db <- clusterSim::index.DB(out$x, out$cc)$DB
+
+  class(out) <- c('ckmeans')
   out
 }
 
@@ -140,12 +163,18 @@ multickmeans <- function(x, ks, n_rep = 50, p_pred = 1, p_samp = 1, save_kms = T
 
   # calculate BIC for consensus clustering
   bics <- unlist(lapply(ckms, function(ckm) ckm$bic))
+  aics <- unlist(lapply(ckms, function(ckm) ckm$aic))
+  sils <- unlist(lapply(ckms, function(ckm) ckm$sil))
+  dbs <- unlist(lapply(ckms, function(ckm) ckm$db))
   names(bics) <- ks
 
   list(
     ckms = ckms,
     ks = ks,
-    bics = bics
+    bics = bics,
+    aics = aics,
+    sils = sils,
+    dbs = dbs
   )
 }
 
@@ -177,9 +206,24 @@ bic_kmeans2 <- function (x, cl) {
 }
 
 #' Helper function for bic_kmeans2
-#' @param x matrix with samples as rows and predictors as columns
+#' @param x matrix with samples as rows and features as columns
 #' @param f vector of cluster memberships for the samples
 .compute.wss <- function(x, f) {
   x.group.mean <- apply(x, 2, tapply, f, mean)
   sum((x - x.group.mean[as.character(f),])^2)
+}
+
+# adapted from adegenet
+#' Function to calculate the AIC (Akaike Information Criterion) for a matrix and cluster membership
+#' @param x matrix with samples as rows and features as columns
+#' @param cl vector of cluster memberships for the samples
+aic_kmeans2 <- function (x, cl) {
+  cs <- unique(cl)
+  k <- length(unique(cl))
+  m <- ncol(x)
+  N <- nrow(x)
+  RSS <- if (k == 1) sum(apply(x, 2, function(v) sum((v - mean(v))^2))) else .compute.wss(x, cl)
+
+  aic <- 2*k*m + N*log(RSS)
+  aic
 }
