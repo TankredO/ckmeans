@@ -116,7 +116,7 @@ plotDist.matrix <- function(x, cl=NULL, value_range=NULL, ord=TRUE, col=NULL, co
     plot(NULL, xlim = c(0, 1.0), ylim = value_range, frame.plot = FALSE, axes = FALSE, xlab = '', ylab = '')
     par(mar=c(0,2,3,2))
     cbar_raster <- as.raster(rev(rgb(t(sapply(seq(0, 1, length.out = 50), cRamp)), maxColorValue = 255)))
-    rasterImage(cbar_raster, 0, 0, 1, 1, interpolate = TRUE)
+    rasterImage(cbar_raster, 0, 0, value_range[1], value_range[2], interpolate = TRUE)
 
     cb_lwd <- if(is.null(dot$cb_lwd)) 1 else dot$cb_lwd
     cb_cex <- if(is.null(dot$cb_cex)) 1 else dot$cb_cex
