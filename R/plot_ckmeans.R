@@ -22,16 +22,21 @@ plotDist <- function(x, ...) UseMethod('plotDist', x)
 #' @param ... further arguments
 #' @export
 plotDist.matrix <- function(x, cl=NULL, value_range=NULL, ord=TRUE, col=NULL, col_cl=NULL, plot_colorbar=FALSE, ...) {
+  old_par <- par(no.readonly = TRUE)
+  on.exit(par(old_par))
+
   # unpack ...
   dot <- list(...)
 
   # prepare par
-  cb_mar_r <- if(is.null(dot$cb_mar_r)) 5 else dot$cb_mar_r
-  mar <- if(is.null(dot$mar)) c(0,3,3,ifelse(plot_colorbar, cb_mar_r, 0)) else dot$mar
+  mar <- if(is.null(dot$mar)) c(0,3,3,0) else dot$mar
+  oma <- if(is.null(dot$oma)) c(1,1,1,1) else dot$oma
+  par(mar=mar, oma=oma)
 
-  old_par <- par(mar=mar, xpd=TRUE)
-  on.exit(par(old_par))
-
+  if(plot_colorbar) layout(
+    matrix(c(1,2), ncol = 2),
+    widths = c(6,1),
+  )
 
   # prepare x
   n <- nrow(x)
@@ -63,7 +68,7 @@ plotDist.matrix <- function(x, cl=NULL, value_range=NULL, ord=TRUE, col=NULL, co
   # if value range is NULL calculate it from the input matrix
   if (is.null(value_range)) value_range <- c(min(x), max(x))
   x_scaled  <- if (value_range[1] == value_range[2]) x
-               else (x - value_range[1]) / (value_range[2]  - value_range[1])
+  else (x - value_range[1]) / (value_range[2]  - value_range[1])
   dist_raster <- as.raster(
     matrix(
       # apply(cRamp(x_scaled), 1, function(col) rgb(col[1], col[2], col[3], maxColorValue = 255)),
@@ -95,31 +100,6 @@ plotDist.matrix <- function(x, cl=NULL, value_range=NULL, ord=TRUE, col=NULL, co
   abline(v = 1:(n-1), col='white', lwd=1)
   abline(h = 1:(n-1), col='white', lwd=1)
 
-
-  # plot color bar
-  if(plot_colorbar) {
-    cbar_raster <- as.raster(rev(rgb(t(sapply(seq(0, 1, length.out = 50), cRamp)), maxColorValue = 255)))
-
-    cb_round_d <- if(is.null(dot$cb_round_d)) 3 else dot$cb_round_d
-
-    cb_x1 <- n + 2.5
-    cb_x2 <- n + 4
-    cb_tick_at <- 0:10
-    cb_n_ticks <- length(cb_tick_at)
-    cb_tick_labels <- round(value_range[1] + cb_tick_at / (cb_n_ticks - 1) * value_range[2], cb_round_d)
-
-    rasterImage(cbar_raster, cb_x1, 0, cb_x2, n, interpolate = TRUE)
-
-    cb_lwd <- if(is.null(dot$cb_lwd)) 1 else dot$cb_lwd
-    sapply(
-      cb_tick_at,
-      function(y) lines(c(cb_x1, cb_x2 + 0.5), rep(y * n / (cb_n_ticks - 1), 2), col='black', lwd=cb_lwd)
-    )
-
-    cb_cex <- if(is.null(dot$cb_cex)) 1 else dot$cb_cex
-    text(cb_x2 + 1.0, cb_tick_at * n / (cb_n_ticks - 1), cb_tick_labels, adj=c(0, 0.55), cex=cb_cex)
-  }
-
   # axis
   at <- 1:n - 0.5
   labels <- rownames(x)
@@ -131,8 +111,29 @@ plotDist.matrix <- function(x, cl=NULL, value_range=NULL, ord=TRUE, col=NULL, co
   # cl lines
   ## TODO: get start and end indices of ranges of the same value withing cl; plot v and h lines
 
+  # plot color bar
+  if(plot_colorbar) {
+    plot(NULL, xlim = c(0, 1.0), ylim = value_range, frame.plot = FALSE, axes = FALSE, xlab = '', ylab = '')
+    par(mar=c(0,2,3,2))
+    cbar_raster <- as.raster(rev(rgb(t(sapply(seq(0, 1, length.out = 50), cRamp)), maxColorValue = 255)))
+    rasterImage(cbar_raster, 0, 0, 1, 1, interpolate = TRUE)
+
+    cb_lwd <- if(is.null(dot$cb_lwd)) 1 else dot$cb_lwd
+    cb_cex <- if(is.null(dot$cb_cex)) 1 else dot$cb_cex
+
+    at <- axisTicks(value_range, FALSE)
+    axis(
+      4, lwd = 0, lwd.ticks = cb_lwd,
+      at = at, cex.axis=cb_cex
+    )
+
+    sapply(at, function(y) lines(c(0, 1.0), c(y,y), lwd=cb_lwd))
+
+  }
+
   return(ord)
 }
+
 
 #' Distance (and consensus cluster) plot for cKmeans
 #' @title Plot ckmeans object as distance matrix
