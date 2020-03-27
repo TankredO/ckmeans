@@ -4,16 +4,7 @@
 \alias{plotDist.ckmeans}
 \title{Plot ckmeans object as distance matrix}
 \usage{
-\method{plotDist}{ckmeans}(
-  x,
-  col = NULL,
-  ord = NULL,
-  returnOrd = FALSE,
-  plotCC = TRUE,
-  col_cl = NULL,
-  main = NULL,
-  ...
-)
+\method{plotDist}{ckmeans}(x, col = NULL, ord = TRUE, col_cl = NULL, plot_colorbar = TRUE, ...)
 }
 \arguments{
 \item{x}{cKmeans object}
@@ -22,13 +13,9 @@
 
 \item{ord}{vectors of indices for ordering the matrix (optional).}
 
-\item{returnOrd}{logical, determining whether the indices used to order the plot should be returned (useful for plotting multiple distance plots with the same order)}
-
-\item{plotCC}{logical, determining whether the consensus cluster should be plotted}
-
 \item{col_cl}{vector of colors for the clusters (optional)}
 
-\item{main}{title of the plot}
+\item{plot_colorbar}{logical determining whether a color bar should be plotted}
 
 \item{...}{further arguments passed to the class specific plotDist functions}
 }

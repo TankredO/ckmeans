@@ -12,97 +12,121 @@ plotDist <- function(x, ...) UseMethod('plotDist', x)
 #' @title Plot distance matrix with clusters
 #' @description Plots a distance matrix with color coded clusters
 #' @author Tankred Ott
-#' @param x n*n matrix
-#' @param cl cluster membership
-#' @param col vector of colors (optional)
-#' @param col_cl vector of colors for the clusters (optional)
-#' @param ord vectors of indices for ordering the matrix (optional).
-#' @param returnOrd logical determining whether the indices used to order the plot should be returned (useful for plotting multiple distance plots with the same order)
-#' @param main plot title
-#' @param ... further arguments passed to the class specific plotDist functions
+#' @param x n*n (distance) matrix
+#' @param cl vector determining cluster membership
+#' @param value_range vector with two elements c(d_min, d_max) determining the possible value range within the matrix. By default this will be the range of values in x.
+#' @param ord vectors of indices for ordering of the matrix or boolean determining whether the matrix should be ordered
+#' @param col vector of colors for the distance matrix
+#' @param col_cl vector of colors or color ramp function for the clusters
+#' @param plot_colorbar logical determining whether a color bar should be plotted
+#' @param ... further arguments
 #' @export
-plotDist.matrix <- function(x, cl = NULL , col = NULL, col_cl = NULL, ord = NULL, returnOrd = FALSE, main = "", ...) {
-  if (is.null(ord)) ord <- seriation::seriate(as.dist(x), method = 'GW')[[1]]$order
-  x_ord <- x[ord, ord]
-  if (!is.null(cl)) cl_ord <- cl[ord]
+plotDist.matrix <- function(x, cl=NULL, value_range=NULL, ord=TRUE, col=NULL, col_cl=NULL, plot_colorbar=FALSE,...) {
+  # unpack ...
+  dot <- list(...)
 
-  renameClusters <- function(cl) {
-    1:length(unique(cl))
-    tmp <- cl
+  # prepare par
+  cb_mar_r <- if(is.null(dot$cb_mar_r)) 5 else dot$cb_mar_r
+  mar <- if(is.null(dot$mar)) c(0,3,3,ifelse(plot_colorbar, cb_mar_r, 0)) else dot$mar
 
-    cls <- 1:length(unique(cl))
-    i <- 1
-    for (c in unique(cl)) {
-      tmp[cl == c] <- cls[i]
-      i <- i + 1
+  old_par <- par(mar=mar, xpd=TRUE)
+  on.exit(par(old_par))
+
+
+  # prepare x
+  n <- nrow(x)
+
+  # if x has no row names set row indices as row names
+  if (is.null(row.names(x))) row.names(x) <- 1:n
+
+  # order
+  if (length(ord) > 1) {
+    x <- x[ord, ord]
+  } else if (ord) {
+    ord <- seriation::seriate(as.dist(x), method = 'GW')[[1]]$order
+    x <- x[ord, ord]
+  } else ord <- 1:n
+  if (!is.null(cl)) cl <- cl[ord]
+  names(ord) <- row.names(x)
+
+  # color Ramp for distance matrix
+  col <- if(is.null(col)) c('#24526E', 'white') else col
+  if (length(col) < 2) stop('Passed a single color as col argument but at least two colors are required!')
+  cRamp <- colorRamp(col)
+
+
+  # create empty plot
+  plot(NULL, xlim = c(0, n), ylim = c(0, n), frame.plot = FALSE, axes = FALSE, xlab = '', ylab = '')
+
+  # figure
+  # if value range is NULL calculate it from the input matrix
+  if (is.null(value_range)) value_range <- c(min(x), max(x))
+  x_scaled  <- if (value_range[1] == value_range[2]) x
+               else (x - value_range[1]) / (value_range[2]  - value_range[1])
+  dist_raster <- as.raster(
+    matrix(
+      # apply(cRamp(x_scaled), 1, function(col) rgb(col[1], col[2], col[3], maxColorValue = 255)),
+      rgb(cRamp(x_scaled), maxColorValue = 255),
+      ncol = n, nrow = n
+    )
+  )
+  rasterImage(dist_raster, 0, 0, n, n, interpolate = FALSE)
+
+
+  # plot cluster membership
+  if(!is.null(cl)) {
+    col_cl <- if(is.null(col_cl)) pals::kelly(22)[5:22] else col_cl
+    if (is.function(col_cl)) {
+      col_cl <- col_cl(length(unique(cl)))
     }
-    tmp
+
+    if (length(unique(col_cl)) < length(unique(cl))) stop('Received less distinct colors than unique values in cl.')
+
+    names(col_cl) <- unique(cl)
+
+    cl_raster <- as.raster(col_cl[as.character(cl)])
+    rasterImage(cl_raster, -1.5, 0, -0.5, n, interpolate = FALSE)
+    rasterImage(t(cl_raster), 0, n+0.5, n, n+1.5, interpolate = FALSE)
   }
 
-  if (!is.null(cl)) cl_ord <- renameClusters(cl_ord)
 
-  lerp <- function(a, b, .t) (1-.t) %*% t(a) + (.t) %*% t(b)
+  # plot lines to create "boxes" instead of a simple raster image
+  abline(v = 1:(n-1), col='white', lwd=1)
+  abline(h = 1:(n-1), col='white', lwd=1)
 
-  if (is.null(col)) {
-    .t <- seq(0, 1, length.out = 256)
-    rgbs <- lerp(c(1,1,1), c(18/255, 136/255, 240/255),.t)
-    col <- rev(rgb(rgbs[,1], rgbs[,2], rgbs[,3]))
+
+  # plot color bar
+  if(plot_colorbar) {
+    cbar_raster <- as.raster(rev(rgb(t(sapply(seq(0, 1, length.out = 50), cRamp)), maxColorValue = 255)))
+
+    cb_round_d <- if(is.null(dot$cb_round_d)) 3 else dot$cb_round_d
+
+    cb_x1 <- n + 2.5
+    cb_x2 <- n + 4
+    cb_tick_at <- 0:10
+    cb_n_ticks <- length(cb_tick_at)
+    cb_tick_labels <- round(value_range[1] + cb_tick_at / (cb_n_ticks - 1) * value_range[2], cb_round_d)
+
+    rasterImage(cbar_raster, cb_x1, 0, cb_x2, n, interpolate = TRUE)
+
+    sapply(
+      cb_tick_at,
+      function(y) lines(c(cb_x1, cb_x2 + 0.5), rep(y * n / (cb_n_ticks - 1), 2), col='black')
+    )
+    text(cb_x2 + 1.0, cb_tick_at * n / (cb_n_ticks - 1), cb_tick_labels, adj=c(0, 0.55))
   }
 
-  getCol <- function(val) {
-    col[ceiling(val * (length(col) - 1)) + 1]
-  }
+  # axis
+  at <- 1:n - 0.5
+  labels <- rownames(x)
 
-  nR <- nrow(x)
-  nC <- ncol(x)
+  axis(2, outer = F, at = rev(at), labels = labels, cex.axis=0.5, pos=(ifelse(is.null(cl), 0, -1.5)), las=1, lwd=0, lwd.ticks = 1)
+  axis(3, outer = F, at = at, labels = labels, cex.axis=0.5, pos=ifelse(is.null(cl), n, n + 1.5), las=2, lwd=0, lwd.ticks = 1)
 
-  w <- 1 / nC
-  h <- 1 / nR
-  m <- w / 20
+  # cl lines
+  ## TODO: get start and end indices of ranges of the same value withing cl; plot v and h lines
 
-  op <- par(xpd=TRUE, mar=c(1, 6, 6, 1), oma=c(0,0,0,0))
-  on.exit(par(op))
-
-  plot(NULL, xlim = c(0, 1), ylim = c(0, 1), axes = F, xlab = NA, ylab = NA, main = main)
-
-  xs <- seq(0, 1, length.out = nC + 1)
-  ys <- seq(0, 1, length.out = nR + 1)
-
-  x12 <- cbind(xs[1:(length(xs)-1)], xs[2:length(xs)])
-  y12 <- cbind(ys[1:(length(ys)-1)], ys[2:length(ys)])
-
-  x_ax <- apply(x12, 1, mean)
-  y_ax <- apply(y12, 1, mean)
-  axis(3, x_ax, labels = colnames(x_ord), las = 2, lwd = 0.25, cex.axis = 0.75)
-  axis(2, y_ax, labels = rev(colnames(x_ord)), las = 2, lwd = 0.25, cex.axis = 0.75)
-
-  if (is.null(col_cl)) col_cl <- RColorBrewer::brewer.pal(7, 'Set1')
-
-  for (.x in 1:nC) {
-
-    for (.y in 1:nR) {
-      .col <- getCol(x_ord[.y, .x])
-      rect(xleft = xs[.y], xright = xs[.y] + w, ytop = 1 - ys[.x], ybottom = 1 - ys[.x] - h,
-           border = NA, col = .col)
-    }
-  }
-
-  for (.x in 1:nC) {
-    lines(x = rep(xs[.x], 2), y = c(0,1), col = 'white', lwd = m)
-    if (!is.null(cl)) {
-      .col_cl <- col_cl[cl_ord[.x]]
-      rect(xleft = xs[.x], xright = xs[.x] + w, ybottom = 1.01, ytop = 1.02, col = .col_cl, border = NA)
-    }
-  }
-  for (.y in 1:nR) {
-    lines(y = rep(ys[.y], 2), x = c(0,1), col = 'white', lwd = m)
-    if (!is.null(cl)) {
-      .col_cl <- col_cl[cl_ord[.y]]
-      rect(ybottom = 1 - ys[.y], ytop = 1 - ys[.y] - h, xright = -0.01, xleft = -0.02, col = .col_cl, border = NA)
-    }
-  }
-
-  if (returnOrd == TRUE) ord
+  return(ord)
 }
 
 #' Distance (and consensus cluster) plot for cKmeans
@@ -111,37 +135,15 @@ plotDist.matrix <- function(x, cl = NULL , col = NULL, col_cl = NULL, ord = NULL
 #' @param x cKmeans object
 #' @param col vector of colors (optional)
 #' @param ord vectors of indices for ordering the matrix (optional).
-#' @param returnOrd logical, determining whether the indices used to order the plot should be returned (useful for plotting multiple distance plots with the same order)
-#' @param plotCC logical, determining whether the consensus cluster should be plotted
 #' @param col_cl vector of colors for the clusters (optional)
-#' @param main title of the plot
+#' @param plot_colorbar logical determining whether a color bar should be plotted
 #' @param ... further arguments passed to the class specific plotDist functions
 #' @export
-plotDist.ckmeans <- function(x, col = NULL, ord = NULL, returnOrd = FALSE, plotCC = TRUE, col_cl = NULL, main = NULL, ...) {
+plotDist.ckmeans <- function(x, col = NULL, ord = TRUE, col_cl = NULL, plot_colorbar=TRUE, ...) {
   # standard plotDist, get order
-  .ord <- plotDist(x = 1-x$pcc, cl = x$cc, col = col, ord = ord, returnOrd = returnOrd, col_cl = col_cl, main = main)
-  #
-  # if (plotCC == TRUE) {
-  #   k <- x$k
-  #   cc <- x$cc[.ord] # get (ordered) consensus clusters
-  #
-  #   if (is.null(colCC)) colCC <- .cols[5:(5+k)]
-  #
-  #   # prepare plotting
-  #   nR <- nC <- ncol(x$pcc)
-  #   h <- 1 / nR
-  #
-  #   xs <- seq(0, 1, length.out = nC + 1)
-  #   x12 <- cbind(xs[1:(length(xs)-1)], xs[2:length(xs)])
-  #
-  #   # plot rectangles representing consensus cluster membership
-  #   for (i in 1:nrow(x12)) {
-  #     rect(xleft = x12[i,1], xright = x12[i,2], ybottom = 1.015, ytop = 1.015 + 2 * h, lty='blank',
-  #          col = colCC[cc[i]])
-  #   }
-  # }
-  #
-  if (returnOrd == TRUE) .ord
+  .ord <- plotDist(x = 1-x$pcc, cl = x$cc, col = col, ord = ord, col_cl = col_cl, plot_colorbar=plot_colorbar, value_range=c(0,1))
+
+  return(.ord)
 }
 
 .cols <- c("#000000", "#FFFF00", "#1CE6FF", "#FF34FF", "#FF4A46", "#008941", "#006FA6", "#A30059",

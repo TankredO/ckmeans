@@ -7,30 +7,30 @@
 \method{plotDist}{matrix}(
   x,
   cl = NULL,
+  value_range = NULL,
+  ord = TRUE,
   col = NULL,
   col_cl = NULL,
-  ord = NULL,
-  returnOrd = FALSE,
-  main = "",
+  plot_colorbar = FALSE,
   ...
 )
 }
 \arguments{
-\item{x}{n*n matrix}
+\item{x}{n*n (distance) matrix}
 
-\item{cl}{cluster membership}
+\item{cl}{vector determining cluster membership}
 
-\item{col}{vector of colors (optional)}
+\item{value_range}{vector with two elements c(d_min, d_max) determining the possible value range within the matrix. By default this will be the range of values in x.}
 
-\item{col_cl}{vector of colors for the clusters (optional)}
+\item{ord}{vectors of indices for ordering of the matrix or boolean determining whether the matrix should be ordered}
 
-\item{ord}{vectors of indices for ordering the matrix (optional).}
+\item{col}{vector of colors for the distance matrix}
 
-\item{returnOrd}{logical determining whether the indices used to order the plot should be returned (useful for plotting multiple distance plots with the same order)}
+\item{col_cl}{vector of colors or color ramp function for the clusters}
 
-\item{main}{plot title}
+\item{plot_colorbar}{logical determining whether a color bar should be plotted}
 
-\item{...}{further arguments passed to the class specific plotDist functions}
+\item{...}{further arguments}
 }
 \description{
 Plots a distance matrix with color coded clusters

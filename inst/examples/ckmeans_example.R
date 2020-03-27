@@ -26,7 +26,6 @@ ckms$
 
 ckms$aics
 
-ord = 1:54
 for (i in 1:length(ckms$ckms)) {
-  plotDist(ckms$ckms[[i]], ord=ord)
+  plotDist(ckms$ckms[[i]], ord=TRUE)
 }
