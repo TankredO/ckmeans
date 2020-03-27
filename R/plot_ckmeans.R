@@ -21,7 +21,7 @@ plotDist <- function(x, ...) UseMethod('plotDist', x)
 #' @param plot_colorbar logical determining whether a color bar should be plotted
 #' @param ... further arguments
 #' @export
-plotDist.matrix <- function(x, cl=NULL, value_range=NULL, ord=TRUE, col=NULL, col_cl=NULL, plot_colorbar=FALSE,...) {
+plotDist.matrix <- function(x, cl=NULL, value_range=NULL, ord=TRUE, col=NULL, col_cl=NULL, plot_colorbar=FALSE, ...) {
   # unpack ...
   dot <- list(...)
 
@@ -40,17 +40,18 @@ plotDist.matrix <- function(x, cl=NULL, value_range=NULL, ord=TRUE, col=NULL, co
   if (is.null(row.names(x))) row.names(x) <- 1:n
 
   # order
+  is_sim <- if(is.null(dot$is_similarity)) FALSE else dot$is_similarity
   if (length(ord) > 1) {
     x <- x[ord, ord]
   } else if (ord) {
-    ord <- seriation::seriate(as.dist(x), method = 'GW')[[1]]$order
+    ord <- seriation::seriate(as.dist(if(is_sim) 1-x else x), method = 'GW')[[1]]$order
     x <- x[ord, ord]
   } else ord <- 1:n
   if (!is.null(cl)) cl <- cl[ord]
   names(ord) <- row.names(x)
 
   # color Ramp for distance matrix
-  col <- if(is.null(col)) c('#24526E', 'white') else col
+  col <- if(is.null(col)) {if(is_sim) c('white', '#24526E') else c('#24526E', 'white')} else col
   if (length(col) < 2) stop('Passed a single color as col argument but at least two colors are required!')
   cRamp <- colorRamp(col)
 
@@ -141,10 +142,40 @@ plotDist.matrix <- function(x, cl=NULL, value_range=NULL, ord=TRUE, col=NULL, co
 #' @export
 plotDist.ckmeans <- function(x, col = NULL, ord = TRUE, col_cl = NULL, plot_colorbar=TRUE, ...) {
   # standard plotDist, get order
-  .ord <- plotDist(x = 1-x$pcc, cl = x$cc, col = col, ord = ord, col_cl = col_cl, plot_colorbar=plot_colorbar, value_range=c(0,1))
+  .ord <- plotDist(
+    x = 1-x$pcc, cl = x$cc,
+    value_range=c(0,1), ord = ord,
+    col = col, col_cl = col_cl,
+    plot_colorbar=plot_colorbar,
+    is_similarity = FALSE
+  )
 
   return(.ord)
 }
+
+#' Consensus plot for cKmeans
+#' @title Plot ckmeans object as distance matrix
+#' @description Plots the consensus matrix as distance matrix
+#' @param x cKmeans object
+#' @param col vector of colors (optional)
+#' @param ord vectors of indices for ordering the matrix (optional).
+#' @param col_cl vector of colors for the clusters (optional)
+#' @param plot_colorbar logical determining whether a color bar should be plotted
+#' @param ... further arguments passed to the class specific plotDist functions
+#' @export
+plot.ckmeans <- function(x, col = NULL, ord = TRUE, col_cl = NULL, plot_colorbar=TRUE, ...) {
+  # standard plotDist, get order
+  .ord <- plotDist(
+    x = x$pcc, cl = x$cc,
+    value_range=c(0,1), ord = ord,
+    col = col, col_cl = col_cl,
+    plot_colorbar=plot_colorbar,
+    is_similarity = TRUE
+  )
+
+  return(.ord)
+}
+
 
 .cols <- c("#000000", "#FFFF00", "#1CE6FF", "#FF34FF", "#FF4A46", "#008941", "#006FA6", "#A30059",
            "#FFDBE5", "#7A4900", "#0000A6", "#63FFAC", "#B79762", "#004D43", "#8FB0FF", "#997D87",
