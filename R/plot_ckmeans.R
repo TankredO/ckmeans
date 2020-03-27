@@ -110,19 +110,23 @@ plotDist.matrix <- function(x, cl=NULL, value_range=NULL, ord=TRUE, col=NULL, co
 
     rasterImage(cbar_raster, cb_x1, 0, cb_x2, n, interpolate = TRUE)
 
+    cb_lwd <- if(is.null(dot$cb_lwd)) 1 else dot$cb_lwd
     sapply(
       cb_tick_at,
-      function(y) lines(c(cb_x1, cb_x2 + 0.5), rep(y * n / (cb_n_ticks - 1), 2), col='black')
+      function(y) lines(c(cb_x1, cb_x2 + 0.5), rep(y * n / (cb_n_ticks - 1), 2), col='black', lwd=cb_lwd)
     )
-    text(cb_x2 + 1.0, cb_tick_at * n / (cb_n_ticks - 1), cb_tick_labels, adj=c(0, 0.55))
+
+    cb_cex <- if(is.null(dot$cb_cex)) 1 else dot$cb_cex
+    text(cb_x2 + 1.0, cb_tick_at * n / (cb_n_ticks - 1), cb_tick_labels, adj=c(0, 0.55), cex=cb_cex)
   }
 
   # axis
   at <- 1:n - 0.5
   labels <- rownames(x)
 
-  axis(2, outer = F, at = rev(at), labels = labels, cex.axis=0.5, pos=(ifelse(is.null(cl), 0, -1.5)), las=1, lwd=0, lwd.ticks = 1)
-  axis(3, outer = F, at = at, labels = labels, cex.axis=0.5, pos=ifelse(is.null(cl), n, n + 1.5), las=2, lwd=0, lwd.ticks = 1)
+  cex.axis <- if(is.null(dot$cex.axis)) 0.5 else dot$cex.axis
+  axis(2, outer = F, at = rev(at), labels = labels, cex.axis=cex.axis, pos=(ifelse(is.null(cl), 0, -1.5)), las=1, lwd=0, lwd.ticks = 1)
+  axis(3, outer = F, at = at, labels = labels, cex.axis=cex.axis, pos=ifelse(is.null(cl), n, n + 1.5), las=2, lwd=0, lwd.ticks = 1)
 
   # cl lines
   ## TODO: get start and end indices of ranges of the same value withing cl; plot v and h lines
@@ -147,7 +151,8 @@ plotDist.ckmeans <- function(x, col = NULL, ord = TRUE, col_cl = NULL, plot_colo
     value_range=c(0,1), ord = ord,
     col = col, col_cl = col_cl,
     plot_colorbar=plot_colorbar,
-    is_similarity = FALSE
+    is_similarity = FALSE,
+    ...
   )
 
   return(.ord)
@@ -170,7 +175,8 @@ plot.ckmeans <- function(x, col = NULL, ord = TRUE, col_cl = NULL, plot_colorbar
     value_range=c(0,1), ord = ord,
     col = col, col_cl = col_cl,
     plot_colorbar=plot_colorbar,
-    is_similarity = TRUE
+    is_similarity = TRUE,
+    ...
   )
 
   return(.ord)

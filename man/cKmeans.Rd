@@ -57,9 +57,11 @@ pairs(x)
 ckm = ckmeans(x, 3, n_rep = 100, p_samp = 0.5, p_pred = 0.5)
 
 # plot consensus matrix with color coded clusters
+plot(ckm, cex.axis = 1, cb_cex = 5)
+
 plotDist(ckm)
 
-plot(ckm)
+
 
 # plot(x, col=ckm$cc, pch=c(rep(1, 10), rep(2, 14)))
 
