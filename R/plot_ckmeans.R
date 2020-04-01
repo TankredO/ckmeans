@@ -49,7 +49,7 @@ plotDist.matrix <- function(x, cl=NULL, value_range=NULL, ord=TRUE, col=NULL, co
   if (length(ord) > 1) {
     x <- x[ord, ord]
   } else if (ord) {
-    ord <- seriation::seriate(as.dist(if(is_sim) 1-x else x), method = 'GW')[[1]]$order
+    ord <- seriation::seriate(as.dist(if(is_sim) max(x)-x else x), method = 'GW')[[1]]$order
     x <- x[ord, ord]
   } else ord <- 1:n
   if (!is.null(cl)) cl <- cl[ord]
