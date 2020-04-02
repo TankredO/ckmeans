@@ -103,7 +103,7 @@ ckmeans <- function(
 
   # calculate proportion of shared clusters for every pair of individuals
   pcc <- if (p_samp == 1) clustered_together / n_rep else clustered_together / sampled_together
-  colnames(pcc) <- samp_names
+  colnames(pcc) <- row.names(pcc) <- samp_names
 
   # calculate consensus clusters
   d <- as.dist(1-pcc)
